@@ -7,18 +7,17 @@
 
 using namespace llvm;
 
-namespace {
-	struct Sheap : public FunctionPass {
-		static char ID;
-		Sheap() : FunctionPass(ID) {}
-
-		bool runOnFunction(Function &F) override {
-			errs() << "Sheap: ";
-			errs().write_escaped(F.getName()) << '\n';
-			return false;
-		}
-	};
-}
+struct Sheap : public FunctionPass {
+	static char ID;
+	Sheap() : FunctionPass(ID) {}
+	bool runOnFunction(Function &F) override;
+};
 
 char Sheap::ID = 0;
 static RegisterPass<Sheap> X("sheap", "Sheap Pass");
+
+bool Sheap::runOnFunction(Function &F) {
+	errs() << "Sheap: ";
+	errs().write_escaped(F.getName()) << '\n';
+	return false;
+}
