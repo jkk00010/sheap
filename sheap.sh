@@ -1,2 +1,2 @@
 #!/bin/sh
-opt -enable-new-pm=0 -load ~/src/llvm-build/lib/LLVMSheap.so -sheap "$@"
+opt -enable-new-pm=0 -load "$(dirname $0)/Sheap.so" -sheap "$@"

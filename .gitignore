@@ -1,3 +1,5 @@
 *.o
+*.so
+*.ll
 *.bc
 a.out
