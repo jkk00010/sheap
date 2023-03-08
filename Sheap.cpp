@@ -2,12 +2,13 @@
 #include "llvm/IR/Module.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/Instructions.h"
+#include "llvm/IR/Attributes.h"
 
 using namespace llvm;
 
 struct Sheap : public ModulePass {
 	static char ID;
-	Sheap() : ModulePass(ID) {}
+	Sheap() : ModulePass(ID) { }
 	bool runOnFunction(Function &F);
 	bool runOnCall(Instruction &I);
 	bool runOnBlock(BasicBlock &B);
@@ -17,6 +18,7 @@ struct Sheap : public ModulePass {
 
 char Sheap::ID = 0;
 static RegisterPass<Sheap> X("sheap", "Sheap Pass");
+constexpr static Attribute DYNAMIC = Attribute();;
 
 bool Sheap::runOnCall(Instruction &I)
 {
@@ -24,14 +26,14 @@ bool Sheap::runOnCall(Instruction &I)
 	Function *fn = ci->getCalledFunction();
 	StringRef name = fn->getName();
 
-	//errs() << "\t" << name << " : " << ci->getArgOperand(0) << "\n";
-	errs() << "\t" << name << "\n";
+	errs() << "\t'" << ci->getName() << "'\t" << name << "\n";
 	for (unsigned i = 0; i < ci->arg_size(); i++) {
 		errs() << "\t" << *(ci->getArgOperand(i)) << "\n";
 	}
 
 	if (name == "malloc") {
 		/* taint return value */
+		//ci->addRetAttr(DYNAMIC);
 	} else if (name == "realloc") {
 		/* taint return value */
 		/* taint first parameter as possibly free */
