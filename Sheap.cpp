@@ -10,12 +10,12 @@
 
 using namespace llvm;
 
-struct Sheap : public CallGraphSCCPass {
+struct Sheap : public ModulePass {
 	static char ID;
-	Sheap() : CallGraphSCCPass(ID) {}
+	Sheap() : ModulePass(ID) {}
 	bool runOnFunction(Function &F); // override;
-	bool runOnModule(Module &M); // override;
-	bool runOnSCC(CallGraphSCC &C) override;
+	bool runOnModule(Module &M) override;
+	bool runOnSCC(CallGraphSCC &C);// override;
 };
 
 char Sheap::ID = 0;
@@ -30,11 +30,43 @@ bool Sheap::runOnFunction(Function &F) {
 bool Sheap::runOnModule(Module &M) {
 	errs() << "Sheap: ";
 	errs().write_escaped(M.getName()) << '\n';
+	auto main = M.getFunction("main");
+	if (!main) {
+		errs() << "main() not found, can't complete analysis\n";
+		return false;
+	}
+	//main->print(errs());
+	int i = 0;
+	//for (auto block = main->front(); block != main->back(); block++) {
+	//for (Function::iterator b = main->begin(), be = main->end(); b != be; b++) {
+	for (BasicBlock &block : *main) {
+		errs() << "block " << i << "\n";
+		//block.print(errs());
+		i++;
+
+		int j = 0;
+		for (Instruction &inst : block) {
+			// Instruction::Load
+			// Instruction::Store
+			if (inst.getOpcode() == Instruction::Call || true) {
+				errs() << "Instruction " << j << "\n";
+				errs() << inst << "\n";
+				errs() << inst.getOpcode() << "\n";
+				errs() << inst.getOpcodeName() << "\n";
+			}
+			j++;
+		}
+	}
 	return false;
 }
 
 bool Sheap::runOnSCC(CallGraphSCC &C) {
 	errs() << "Sheap: ";
-	C.getCallGraph().print(errs());
+	//auto cg = CallGraph(C.getCallGraph());
+	//C.getCallGraph().print(errs());
+	for (auto i = C.begin(); i < C.end(); i++) {
+		//errs() << i << "\n";
+		errs() << "iterating\n";
+	}
 	return false;
 }
