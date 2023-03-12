@@ -1,11 +1,12 @@
 .POSIX:
 
-LLVM_VERSION=-13
+LLVM_VERSION=
+LLVM_PATH=/usr/local/bin/
 
-CXX=clang++$(LLVM_VERSION)
-LD=clang++$(LLVM_VERSION)
-CXXFLAGS=-std=c++17 -Wall -fpic -fPIC $$(llvm-config$(LLVM_VERSION) --cxxflags)
-LDFLAGS=-shared $$(llvm-config$(LLVM_VERSION) --ldflags)
+CXX=$(LLVM_PATH)clang++$(LLVM_VERSION)
+LD=$(LLVM_PATH)clang++$(LLVM_VERSION)
+CXXFLAGS=-std=c++17 -Wall -fpic -fPIC $$($(LLVM_PATH)llvm-config$(LLVM_VERSION) --cxxflags)
+LDFLAGS=-shared $$($(LLVM_PATH)llvm-config$(LLVM_VERSION) --ldflags)
 SHEAP_OBJS=Sheap.o
 
 all: Sheap.so
