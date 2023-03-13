@@ -1,5 +1,3 @@
-#include <string>
-#include <cstdlib>
 #include <map>
 
 #include "llvm/Pass.h"
@@ -38,27 +36,27 @@ char Sheap::ID = 0;
 std::map<unsigned, Taint> Sheap::Taints;
 static RegisterPass<Sheap> X("sheap", "Sheap Pass");
 
-static std::string stringFromTaint(Taint t)
+llvm::raw_ostream& operator<<(llvm::raw_ostream &os, Taint T)
 {
-	switch (t) {
-	case Taint::None:		return "None";
-	case Taint::Dynamic:		return "Dynamic";
-	case Taint::PossiblyFree:	return "PossiblyFree";
-	case Taint::Free:		return "Free";
+	switch (T) {
+	case Taint::None:		return os << "None";
+	case Taint::Dynamic:		return os << "Dynamic";
+	case Taint::PossiblyFree:	return os << "PossiblyFree";
+	case Taint::Free:		return os << "Free";
 	}
-	return "???";
+	return os << "???";
 }
 
 void Sheap::setTaint(Value &V, Taint T)
 {
-	errs() << "Tainting " << V.getValueID() << ": " << stringFromTaint(T) << "\n";
+	errs() << "Tainting " << V.getValueID() << ": " << T << "\n";
 	Taints[V.getValueID()] = T;
 }
 
 Taint Sheap::getTaint(Value &V)
 {
 	auto T = Taints[V.getValueID()];
-	errs() << "Reading " << V.getValueID() << ": " << stringFromTaint(T) << "\n";
+	errs() << "Reading " << V.getValueID() << ": " << T << "\n";
 	return T;
 }
 
@@ -84,7 +82,7 @@ bool Sheap::runOnCall(Instruction &I)
 		/* taint first parameter as definitely free */
 		auto addr = ci->getArgOperand(0);
 		errs() << "FREE: " << addr->getValueID() << "\n";
-		errs() << stringFromTaint(getTaint(*addr)) << "\n";
+		errs() << getTaint(*addr) << "\n";
 		setTaint(*addr, Taint::Free);
 
 	} else {
@@ -100,7 +98,6 @@ bool Sheap::runOnLoad(Instruction &I)
 	auto ptr = li->getPointerOperand();
 	errs() << ptr->getValueID() << " = " << li->getValueID() << "\n";
 	setTaint(*li, getTaint(*ptr));
-	errs() << "copying taint from " << ptr->getValueID() << " to " << li->getValueID() << "\n";
 	return false;
 }
 
@@ -110,7 +107,6 @@ bool Sheap::runOnStore(Instruction &I)
 	auto val = si->getValueOperand();
 	auto ptr = si->getPointerOperand();
 	errs() << ptr->getValueID() << " = " << si->getValueID() << " = " << val->getValueID() << "\n";
-	errs() << "copying taint from " << val->getValueID() << " to " << ptr->getValueID() << "\n";
 	setTaint(*ptr, getTaint(*val));
 	return false;
 }
@@ -121,6 +117,13 @@ bool Sheap::runOnInstruction(Instruction &I)
 	case Instruction::Alloca: {
 			AllocaInst *ai = dyn_cast<AllocaInst>(&I);
 			errs() << ai->getValueID() << "\n";
+			if (ai->hasName()) {
+				errs() << ai->getName() << "\n";
+			}
+			auto VN = ai->getValueName();
+			if (VN != nullptr) {
+				errs() << VN->first() << "\n";
+			}
 		}
 		break;
 	case Instruction::Load:
@@ -158,7 +161,7 @@ bool Sheap::runOnBlock(BasicBlock &B)
 		runOnInstruction(I);
 		j++;
 
-		errs() << "\n\n";
+		errs() << "\n";
 	}
 	return false;
 }
@@ -173,6 +176,5 @@ bool Sheap::runOnModule(Module &M)
 		return false;
 	}
 	runOnFunction(*main);
-	//std::exit(0);
 	return false;
 }
